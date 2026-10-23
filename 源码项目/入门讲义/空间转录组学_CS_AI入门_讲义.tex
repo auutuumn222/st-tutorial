@@ -1,0 +1,957 @@
+% !TeX program = xelatex
+% 编码：UTF-8。建议使用 XeLaTeX 编译两次，以生成目录与交叉引用。
+% 本文件使用同目录的《空间转录组学_CS_AI入门_讲义_配图》文件夹；无需 .bib 文件。
+% 依据同目录《空间转录组学_CS_AI入门.pdf》整理。
+% 保留原文 17 章的顺序、主要解释、类比、教学数据与参考来源。
+% 新增与学术汇报相同的10幅教学配图；出处与许可随图标注。
+\documentclass[UTF8,a4paper,11pt,fontset=fandol]{ctexart}
+
+\usepackage[margin=2.35cm,headheight=23pt]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,longtable,array}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage[unicode,colorlinks=true]{hyperref}
+\pdfstringdefDisableCommands{\def\quad{ }}
+\hypersetup{
+  pdftitle={空间转录组学入门：从细胞、DNA 和蛋白质到 CS 数据与科研问题},
+  pdfsubject={面向计算机与人工智能专业本科生和研究生的入门讲义}}
+
+% 学术讲义配色：深蓝标题、青色次级标题、浅蓝表格与提示框。
+\definecolor{accent}{HTML}{244C6A}
+\definecolor{tealaccent}{HTML}{286D77}
+\definecolor{lightblue}{HTML}{EFF4F8}
+\definecolor{tealwash}{HTML}{EDF5F4}
+\definecolor{tablehead}{HTML}{DAE7F0}
+\definecolor{muted}{HTML}{607384}
+\definecolor{bodytext}{HTML}{24323D}
+\hypersetup{linkcolor=accent,citecolor=tealaccent,urlcolor=tealaccent}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{accent}AI4Science 入门资料\quad /\quad 空间转录组学}
+\fancyhead[R]{\small\color{tealaccent}Auutuumn}
+\fancyfoot[L]{\small\color{muted}从生物学概念到计算与科研}
+\fancyfoot[R]{\small\color{accent}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{accent!45}\leaders\hrule height\headrulewidth\hfill}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.30em}
+\linespread{1.12}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{6pt}
+\setlist{nosep,leftmargin=2em,topsep=0.4em}
+\setlength{\intextsep}{9pt}
+\captionsetup{skip=6pt,font={small,color=muted},labelfont={bf,color=accent},labelsep=quad}
+\ctexset{
+  section={format=\Large\bfseries\color{accent},beforeskip=0.5em,afterskip=0.7em},
+  subsection={format=\normalsize\bfseries\color{tealaccent},beforeskip=0.6em,afterskip=0.2em}}
+% 编号及目录均到 1.1 层级；各部分之间保留第 1--17 章的连续编号。
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\term}[2]{{\color{accent}\textbf{#1}}（#2）}
+\tcbset{learningstyle/.style={breakable,boxrule=0.4pt,arc=1mm,
+  colback=lightblue,colframe=accent!45,colbacktitle=tablehead,
+  coltitle=accent,fonttitle=\bfseries,left=3mm,right=3mm,
+  top=2mm,bottom=2mm,before skip=0.8em,after skip=0.5em}}
+\newcommand{\takeaway}[1]{\begin{tcolorbox}[learningstyle,title=本章要记住]#1\end{tcolorbox}}
+\newcommand{\checkpoint}[1]{\begin{tcolorbox}[learningstyle,title=理解检查,
+  colback=tealwash,colbacktitle=tealaccent!12,colframe=tealaccent!45,
+  coltitle=tealaccent]#1\end{tcolorbox}}
+\newcommand{\chapterstart}[1]{\clearpage\section{#1}}
+\newcommand{\code}[1]{{\color{tealaccent}\texttt{#1}}}
+% 部分页承担阅读导航；不改变章号，也不引入 1.1.1 级标题。
+\newcommand{\partdivider}[3]{%
+  \clearpage
+  \refstepcounter{part}%
+  \addcontentsline{toc}{part}{第\chinese{part}部分\quad #1}%
+  \vspace*{0.16\textheight}
+  \noindent{\large\color{tealaccent}第\chinese{part}部分}\par
+  \vspace{0.6em}
+  \noindent{\Huge\bfseries\color{accent}#1}\par
+  \vspace{1.2em}
+  \noindent{\color{tealaccent}\rule{0.2\linewidth}{2pt}}\par
+  \vspace{1.2em}
+  \noindent{\large\color{muted}#2}\par
+  \vspace{1em}
+  \begin{tcolorbox}[learningstyle,title=这一部分要理解什么]
+    #3
+  \end{tcolorbox}
+  \vfill
+  \noindent{\small\color{muted}空间转录组学入门\quad /\quad 学习路线}\par
+}
+\arrayrulecolor{accent!55}
+
+\begin{document}
+\color{bodytext}
+% 在每页内容下方加淡色作者水印，不占用正文版面。
+\AddToHook{shipout/background}{%
+  \put(0pt,-\paperheight){%
+    \parbox[b][\paperheight][c]{\paperwidth}{\centering
+      \rotatebox{42}{\fontsize{34}{40}\selectfont\bfseries
+        \color{accent!4.5!white}Auutuumn}}}%
+}
+
+\begin{center}
+  {\LARGE\bfseries\color{accent}空间转录组学入门\par}
+  \vspace{0.7em}
+  {\large\color{tealaccent}从细胞、DNA 和蛋白质到 CS 数据与科研问题\par}
+  \vspace{0.6em}
+  {\color{muted}面向计算机与人工智能专业的本科生和研究生\par}
+\end{center}
+\noindent{\color{accent!50}\rule{\linewidth}{0.6pt}}
+
+\noindent\textbf{适用读者：}有计算机或人工智能背景，但对生物学基本概念尚不熟悉的学生。本文从你能想象的组织和细胞出发，逐步说明 RNA 怎样变成实验数据，再解释算法能用这些数据研究什么。不要求预先学过分子生物学；读到矩阵部分时，具备基本的线性代数和机器学习概念会有帮助。
+
+\noindent\textbf{写作动机：}我的研究生学习领域涉及空间转录组学相关知识。在学习和研究过程中，我体会到，刚接触这一方向的同学往往需要先熟悉一些生物学概念，才能进一步理解实验数据和计算方法。因此，我整理了这份入门资料，希望把相关知识讲得更清楚一些，也帮助更多同学顺利迈出第一步。
+
+读完后，你应该能够用自己的话说明：空间转录组测什么、为什么要保留位置、矩阵的一行和一列代表什么，以及一个 AI 模型的输出如何成为有依据的科学结论。
+
+\subsection*{先给脑中放一张简单的图}
+一小块组织里有许多细胞。研究人员测量不同位置的 RNA，用这些分子信号了解细胞的身份和状态，再把信息放回组织地图。这就是后面所有内容的起点。RNA 是什么、为什么能提供线索，我们接下来慢慢解释。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l l Y@{}}
+\toprule
+\rowcolor{tablehead}
+阶段 & 阅读内容 & 理解目标 \\
+\midrule
+先认识研究对象 & 第 1--5 章 & 细胞、DNA、基因、RNA、蛋白质和表达 \\
+再理解测量方法 & 第 6--9 章 & 转录组、单细胞、空间信息与实验读数 \\
+最后进入 CS 与科研 & 第 10--15 章 & 数据表示、分析流程、研究问题和验证 \\
+遇到术语时回查 & 第 16--17 章 & 核心名词及来源 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection*{贯穿全文的例子}
+我们假设研究人员拿到一张肿瘤组织薄片，想了解“不同细胞在哪里，以及免疫细胞是否出现在肿瘤内部”。这是一个研究问题示例，不预设答案，也不凭细胞分布直接判断治疗效果。后面的计数和布局均为教学构造。
+
+你不需要一次读完。前五章能讲清楚，就已经补上了理解空间转录组最关键的基础。类比帮助建立直觉，但不能代替真实的分子与实验过程。
+
+\medskip
+\noindent{\small\color{muted}\textbf{整理说明：}本讲义依据《空间转录组学\_CS\_AI入门》PDF 整理，保留原文的章节顺序、讲解方式与教学例子，仅补充少量面向 CS / AI 读者的符号解释与阅读提示。原文注明的资料核对日期为 2026 年 10 月 14 日；文末来源沿用原文，不表示本次对所有在线页面作了重新核验。}
+
+\clearpage
+\tableofcontents
+
+\partdivider{生物学基础}{第 1--5 章：从组织和细胞到基因表达}{%
+  先认识研究对象，再认识细胞如何保存和使用信息。建立 DNA、基因、RNA、蛋白质与表达之间的联系，区分细胞类型和细胞状态，为理解实验读数做好准备。}
+
+\chapterstart{先认识组织和细胞}
+想象医生取出一小块组织，把它切成薄片，放在显微镜下。这张薄片并不是均匀的一团材料：里面有许多细胞，细胞之间还有支撑它们的物质。我们研究的“组织”，就是这样的结构。
+
+\subsection{组织和细胞分别在哪一层}
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y l@{}}
+\toprule
+\rowcolor{tablehead}
+层次 & 简单解释 & 例子 \\
+\midrule
+人体 & 整个生命个体 & 一个人 \\
+器官 & 多种组织共同承担一定功能的结构 & 心脏 \\
+组织 & 细胞与周围材料形成的结构 & 心脏中的心肌组织 \\
+细胞 & 人体结构和功能的基本单位 & 心肌细胞 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+所以，你可以先记住“人体 $\rightarrow$ 器官 $\rightarrow$ 组织 $\rightarrow$ 细胞”。组织比细胞大，但组织不仅仅是细胞的简单堆积，细胞之间的材料和排列也属于组织的一部分。\cite{nci-organ}
+
+\subsection{细胞可以想象成一个微小的工作单位}
+典型有核人体细胞外面有细胞膜，内部有细胞质和细胞核。细胞膜像边界；细胞质是内部许多活动发生的环境；细胞核保存着大部分 DNA。这里描述的是常见结构，人体也有成熟红细胞等例外，不需要用例外打断最初的理解。
+
+细胞有不同分工。例如，上皮细胞构成身体表面或器官内壁等结构；免疫细胞参与防御；成纤维细胞参与组织支撑和修复。先认识这三类名字就够了，不必现在背全部细胞分类。
+
+
+% BEGIN ADDED IMAGE nucleus
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/nucleus.jpg}
+\caption{典型有核细胞的局部示意。紫色区域为细胞核（Nucleus），其外为细胞质（Cytoplasm），最外侧为细胞膜；核糖体参与蛋白质合成。先认识这些位置关系，图中的转录与翻译将在后文展开。示意颜色与尺寸用于教学，不是显微照片。}\label{fig:handout-nucleus}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Nucleus}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE nucleus
+
+\subsection{为什么显微镜照片还不够}
+照片能提供外形、排列和组织结构的线索，专家也能据此作出许多判断。但它不能直接给出所有细胞的分子状态。我们希望知道某个细胞是否在增殖、是否受到刺激，以及它属于哪类细胞；这时需要更多测量。
+
+
+% BEGIN ADDED IMAGE histology
+\begin{figure}[!htbp]\centering
+\begin{minipage}[c]{.42\linewidth}\centering \includegraphics[width=.92\linewidth]{空间转录组学_CS_AI入门_讲义_配图/histology.jpg}\end{minipage}\hfill\begin{minipage}[c]{.53\linewidth}\small \textbf{先看组织的排列。}深紫色区域帮助观察细胞核的位置，图中还能看到表面上皮和下方的腺体结构。\par\medskip \textbf{再区分形态与分子测量。}组织照片有助于认识结构；若要知道哪些基因在这些位置表达，还需要相应的分子测量。\end{minipage}
+\caption{真实的宫颈管组织显微图像，采用苏木精—伊红（H\&E）染色。它展示了形态与排列，但不能直接给出各位置的 RNA 表达；此图不是贯穿全文肿瘤案例的样本。}\label{fig:handout-histology}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://commons.wikimedia.org/wiki/File:Histology_of_endocervix.jpg}{Mikael H\"aggstr\"om}；许可：\href{https://creativecommons.org/publicdomain/zero/1.0/}{CC0 1.0}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE histology
+
+回到肿瘤薄片：我们能看到一片组织，但还想知道其中哪些位置有免疫细胞。这就要进一步认识细胞里面保存和使用的信息。
+
+\takeaway{组织里有细胞；细胞有不同分工；照片提供形态，分子测量提供另一类信息。}
+
+\chapterstart{DNA 和基因究竟是什么}
+\subsection{DNA 是保存遗传信息的分子}
+DNA 是一种实际存在的分子，不是抽象概念。它的结构常画成双螺旋，像扭转的梯子。DNA 的序列可用 A、T、C、G 四种字母表示；这些字母代表不同的碱基，它们的排列承载遗传信息。\cite{nhgri-dna}
+
+作为 CS 学生，你可以把 DNA 序列先看成很长的字符串。但真实 DNA 是分子，它的包装方式和细胞中的环境也会影响信息如何被使用。字符串只是第一层表示。
+
+
+% BEGIN ADDED IMAGE dna
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/dna.jpg}
+\caption{DNA 的结构与序列是两个观察视角。左侧为双螺旋，中间放大了碱基配对，右侧显示局部化学结构；A 与 T 配对，C 与 G 配对。入门时重点理解分子结构与字母序列的联系，无须记忆右侧化学细节。}\label{fig:handout-dna}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Deoxyribonucleic-Acid-DNA}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE dna
+
+\subsection{基因是 DNA 上具有功能的一段信息}
+基因不是整条 DNA 的另一个名字。一个基因对应 DNA 上的特定区段，可用于产生 RNA；许多基因最终与蛋白质的制造有关，还有一些基因产生的 RNA 本身就有功能。\cite{nhgri-glossary}
+
+把 DNA 类比成一本很长的说明书，基因像其中一段有具体用途的内容。DNA 上也有参与调控等作用的区域，因此不能把全部 DNA 都当成一段段蛋白质制造说明。
+
+\subsection{染色体和基因组怎么放进这张图}
+DNA 会与蛋白质结合，组织成染色体。可以粗略把染色体理解成 DNA 的包装形式。基因组指一套遗传信息；它与“此刻表达了什么”是两个问题。\cite{nhgri-glossary}
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+概念 & 你可以先这样记 & 不要混淆成 \\
+\midrule
+DNA & 保存遗传信息的分子 & 某一个基因 \\
+基因 Gene & DNA 上具有功能的特定区段 & 整套遗传信息 \\
+染色体 Chromosome & DNA 与蛋白质形成的组织结构 & 新的另一种信息分子 \\
+基因组 Genome & 一套遗传信息 & 当前正在使用的信息集合 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+% BEGIN ADDED IMAGE chromosome
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/chromosome.jpg}
+\caption{从 DNA 双螺旋到染色体的组织层次。可从右向左观察 DNA 如何与蛋白质结合并形成更高层次的包装；各部分不按统一比例绘制。图中的 X 形是特定阶段的结构示意，不表示染色体始终呈 X 形。}\label{fig:handout-chromosome}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Chromosome}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE chromosome
+
+\subsection{为什么不同细胞可以拥有相似 DNA}
+同一个人的多数有核体细胞，基因组大体相同。然而神经细胞和免疫细胞的工作明显不同。重要原因之一是：它们使用不同的基因，使用程度也不同。DNA 中“有这段信息”与细胞“现在正在使用这段信息”，需要分开。
+
+\takeaway{基因是 DNA 的特定区段；基因存在，不代表它此刻被同样程度地使用。}
+
+\chapterstart{RNA 是怎样产生的}
+\subsection{细胞会按照 DNA 信息制造 RNA}
+RNA 是另一类实际存在的分子。细胞按照 DNA 中的信息合成 RNA，这个过程叫\term{转录}{transcription}。DNA 并不是整条变成 RNA；细胞利用相应信息生成 RNA 分子，DNA 仍然存在。\cite{nhgri-transcription}
+
+继续用说明书类比：DNA 是保存的信息，RNA 可以像为当前工作制作的副本。一段基因信息可以对应多个 RNA 分子，所以 RNA 的数量会随细胞状态变化。这里的“副本”强调信息关系，不表示 DNA 和 RNA 的化学组成完全相同。
+
+
+% BEGIN ADDED IMAGE transcription
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/transcription.jpg}
+\caption{真核细胞中的转录及 mRNA 加工示意。沿图自上而下观察：RNA 聚合酶根据 DNA 模板合成 RNA，mRNA 经加工后可经核孔离开细胞核。此图展示 mRNA 的典型路线，不表示所有 RNA 都会离核或进入翻译。}\label{fig:handout-transcription}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Transcription}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE transcription
+
+\subsection{mRNA 是 RNA 中的一种}
+mRNA 叫信使 RNA，它携带用于制造蛋白质的信息。RNA 还有其他类别，其中一些参与蛋白质制造的过程，另一些参与调控等功能。你现在只需记住：\textbf{mRNA 是 RNA 的一个子类，不是所有 RNA 都是 mRNA。}\cite{nhgri-mrna}
+
+
+% BEGIN ADDED IMAGE rna
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/rna.jpg}
+\caption{RNA 不只有 mRNA。右上方为信使 RNA（mRNA），其下展示转运 RNA（tRNA）和核糖体 RNA（rRNA）相关结构；后两者也参与蛋白质合成。RNA 可以形成复杂结构，不能把所有 RNA 都理解为等待翻译的一条直线。}\label{fig:handout-rna}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Ribonucleic-Acid-RNA}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE rna
+
+\subsection{RNA 为什么能提供细胞状态的线索}
+如果某类 RNA 在一个细胞中测得比较多，说明这个细胞在相应表达方面有一定信号。不同细胞会呈现不同的 RNA 组合；同一类细胞受到刺激后，组合也可能改变。通过这些组合，我们可以研究细胞的身份和状态。
+
+但 RNA 水平不是“此刻产生速度”的直接读数。它同时受合成、降解及测量过程影响。我们测到的是实验所记录的 RNA 信号，再据此作解释。
+
+\subsection{先把一个常见误解排除}
+“DNA $\rightarrow$ RNA”表示信息通过转录被用于制造 RNA，不表示细胞把自己的 DNA 消耗掉。类似你从文件生成多个工作副本，原文件仍然在，只是这个计算机类比忽略了许多真实分子过程。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+你想知道什么 & 更相关的观察 \\
+\midrule
+细胞拥有哪些遗传信息 & DNA 或基因组信息 \\
+细胞当时有哪些 RNA 信号 & RNA 或转录组信息 \\
+细胞里有哪些功能性蛋白质 & 蛋白质相关测量 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+回到我们的薄片：测 RNA 可以帮助识别免疫相关的表达特征，但并不是直接拍到了一个“免疫细胞标签”。我们后面还会解释怎样从信号推断身份。
+
+\takeaway{转录根据 DNA 信息产生 RNA；测得的 RNA 水平为细胞身份和状态提供线索。}
+
+\chapterstart{蛋白质是什么以及怎样产生}
+\subsection{蛋白质由氨基酸链组成}
+蛋白质是一类分子，通常由一条或多条氨基酸链构成。把氨基酸想成不同种类的小珠子：珠子按一定顺序连起来，链再折叠成一定形状。顺序影响结构，结构与功能密切相关。\cite{nhgri-protein}
+
+单个蛋白质分子在分子尺度，肉眼看不见，普通光学显微镜通常也无法直接辨认其具体形状。但大量蛋白质构成的材料可以看见、摸到：头发富含角蛋白，肌肉含有参与收缩的蛋白质。蛋清也含有许多蛋白质，同时含大量水。
+
+
+% BEGIN ADDED IMAGE protein
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/protein.jpg}
+\caption{蛋白质的结构层次。从左到右依次为氨基酸序列、局部结构、整体折叠与多链组装；并非每种蛋白质都有多链组装这一层次。先理解“链具有顺序，也具有空间结构”，再将结构与功能联系起来。}\label{fig:handout-protein}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Protein}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE protein
+
+\subsection{翻译把 mRNA 的信息用于制造蛋白质}
+细胞中的核糖体等分子机器读取 mRNA 的信息，将氨基酸按相应顺序连接起来。这个过程叫\term{翻译}{translation}。这里的“翻译”是分子生物学术语，和自然语言翻译是不同任务。\cite{nhgri-translation}
+
+
+% BEGIN ADDED IMAGE translation
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/translation.jpg}
+\caption{翻译过程示意。下方长链为 mRNA，蓝绿色结构为核糖体，正在延长的彩色小球串代表多肽链；tRNA 参与运送相应的氨基酸。RNA 提供编码信息，氨基酸构成多肽链，不能把翻译理解为 RNA 本身变成蛋白质。}\label{fig:handout-translation}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://www.genome.gov/genetics-glossary/Translation}{NHGRI}；许可：\href{https://www.genome.gov/about-nhgri/Policies-Guidance/Copyright}{Public domain}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE translation
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth,font=\small]
+  \draw[draw=accent,fill=lightblue,rounded corners] (0,0) rectangle (14,3.3);
+  \node[anchor=west] at (0.3,3) {典型有核人体细胞的简化示意};
+  \draw[draw=accent,fill=accent!12] (2.4,1.4) ellipse (1.7 and 1.1);
+  \node at (2.4,1.95) {细胞核};
+  \node at (2.4,1.15) {DNA 中的基因信息};
+  \draw[->,thick,accent] (4.2,1.35) -- (6,1.35);
+  \node at (5.1,1.85) {转录};
+  \node at (7.1,1.35) {mRNA};
+  \draw[->,thick,accent] (8.1,1.35) -- (10.3,1.35);
+  \node at (9.2,1.85) {翻译};
+  \node at (11.7,1.35) {蛋白质};
+\end{tikzpicture}
+\caption{信息关系示意，不按实际尺寸绘制。mRNA 在核内产生，参与蛋白质制造前通常需要加工并转运；图中省略这些步骤。部分 RNA 本身有功能，不进入翻译路线。}
+\label{fig:dna-rna-protein}
+\end{figure}
+
+\subsection{为什么蛋白质重要}
+许多具体工作由蛋白质承担：酶帮助化学反应进行，血红蛋白运输氧气，抗体参与防御，受体接收信号。受体可以先理解为细胞识别某些外来分子信号的组件。
+
+
+% BEGIN ADDED IMAGE hemoglobin
+\begin{figure}[!htbp]\centering
+\begin{minipage}[c]{.42\linewidth}\centering \includegraphics[width=.92\linewidth]{空间转录组学_CS_AI入门_讲义_配图/hemoglobin.png}\end{minipage}\hfill\begin{minipage}[c]{.53\linewidth}\small \textbf{把功能名词与具体结构联系起来。}血红蛋白是上文运输氧气的例子，这里可以看到蛋白质的空间结构。\par\medskip \textbf{再回到测量层次。}RNA 提供表达线索；若要判断蛋白质含量或功能是否发生变化，仍需相应证据。\end{minipage}
+\caption{血红蛋白的三维结构模型，由 PDB 1GZX 的结构数据绘制，飘带帮助展示蛋白链的折叠。模型不是显微照片，绘图颜色也不是分子的真实颜色；它不能给出组织中的蛋白质含量。}\label{fig:handout-hemoglobin}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://commons.wikimedia.org/wiki/File:1GZX_Haemoglobin.png}{Richard Wheeler (Zephyris)}；许可：\href{https://creativecommons.org/licenses/by-sa/3.0/}{CC BY-SA 3.0}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE hemoglobin
+
+\takeaway{DNA 保存信息；转录产生 RNA；其中的 mRNA 可被翻译成蛋白质；蛋白质承担许多实际功能。}
+
+\chapterstart{基因表达是在说什么}
+\subsection{表达表示基因信息被用于产生功能产物}
+\term{基因表达}{gene expression}，是基因信息被用于产生 RNA 或蛋白质等功能产物的过程。研究 RNA 数据时，“某基因表达高”通常表示与这个基因相关的 RNA 信号测得较多。\cite{nhgri-expression}
+
+例如，细胞甲和细胞乙都拥有某个基因，但在相同测量条件下，甲记录到更多对应 RNA。我们会说甲的这个基因表达较高。它并不表示甲拥有更多个基因，也不表示 DNA 序列变长了。
+
+\subsection{为什么相似 DNA 能产生不同细胞}
+细胞并不会同样程度地使用所有基因。不同的表达组合与细胞不同的结构、功能和状态有关。可以把它理解成：员工拥有相似的说明书，但当前执行的任务不同，生成的工作副本也不同。
+
+\subsection{细胞类型和细胞状态要分开}
+\term{细胞类型}{cell type}是较稳定的身份，例如免疫细胞中的 T 细胞；\term{细胞状态}{cell state}是当下的活动情况，例如应对刺激或正在增殖。增殖就是细胞分裂、数量增加相关的过程。
+
+同一种类型可以有不同状态，不同类型也可能共享一种状态。例如，多个类型都可能处于增殖状态。算法把细胞分成两组后，需要判断分组反映的是身份、状态，还是实验差异。
+
+\subsection{标志基因怎样帮助识别细胞}
+某些基因的表达常为识别细胞身份或状态提供线索，我们称它们为\term{标志基因}{marker gene}。科研人员通常结合多个标志、已有研究和组织背景判断，而不是看到一个基因较高就给出确定标签。
+
+\subsection{RNA 多为什么不一定等于蛋白质多}
+从 RNA 到蛋白质，中间还有翻译效率和蛋白质降解等过程。测 RNA 是一个观测层次，测蛋白质是另一个观测层次。RNA 数据可以提出功能相关假设，但不自动证明蛋白质数量或功能强度发生了相同变化。
+
+\checkpoint{基因是信息区段，表达是信息被使用；细胞类型是身份，细胞状态是当下情况。空间转录组主要提供 RNA 层面的表达线索。请试着解释：两个细胞拥有相似的 DNA，为什么仍可能表现出不同的功能？}
+
+\partdivider{测量原理与空间信息}{第 6--9 章：从 RNA 集合到带位置的实验读数}{%
+  理解转录组测量的范围和局限，比较混合组织、单细胞与空间测量。弄清一个测量单位代表什么，以及条形码、UMI 和成像怎样把 RNA 信号与位置关联起来。}
+
+\chapterstart{转录组是很多 RNA 的整体情况}
+\subsection{先理解为什么要加一个“组”字}
+只测一个基因，可以看到一个信号；同时测很多基因，才能看到整体的表达组合。\term{转录组}{transcriptome}指一个细胞或组织在特定条件下的 RNA 集合。\cite{nhgri-transcriptome}
+
+你可以把它理解为一份“当时的 RNA 情况表”。它与基因组不同：基因组主要描述保存的遗传信息，转录组描述当时存在的 RNA。细胞的环境或状态改变时，转录组也可能变化。
+
+\subsection{一个基因和一个 RNA 分子不是一一对应}
+一个基因可以产生很多 RNA 分子。一个基因也可能产生不同的\term{转录本}{transcript}。这里的转录本可以先理解为 RNA 产物；谈“转录本种类”时，也可能在区分同一基因产生的不同版本。
+
+在常见入门分析中，研究人员会把与同一基因有关的信号汇总到基因层面。因此表达表的一列常是一个基因，数值反映该基因相关信号，而不是说“每个基因只有一个 RNA”。
+
+\subsection{测转录组不等于测到了所有 RNA}
+真实实验存在捕获效率、测序投入和技术覆盖范围的限制。有些方案关注较广的转录组，有些只检测预先选定的一组基因。这组目标叫 \term{panel}{基因面板}，可以先理解为实验事先决定的“测量名单”。
+
+因此，数据里没看到某个 RNA 信号，不能直接说细胞完全没有它。尤其某个基因根本不在测量名单中时，它属于没有观测，不能当成确定的零表达。
+
+对 CS / AI 读者来说，这里要区分两种情况：“测了这个特征但读数为零”，以及“实验根本没有测这个特征”。即使文件里都能用零填充，它们的含义也不相同。
+
+\subsection{RNA 测量怎样帮助研究组织}
+假设免疫相关的一组基因在某些区域更明显，研究人员就有理由进一步检查这些区域是否含有免疫细胞。表达模式提供线索，已有参考和额外验证帮助判断线索是否可靠。
+
+我们还没有加入空间。下一步先看看：如果同样测 RNA，但把细胞合在一起或分开测，会得到哪些不同信息。
+
+\takeaway{转录组是一组 RNA 的整体情况；表达数据是对它的不完整测量。}
+
+\chapterstart{混在一起测和分开测有什么区别}
+\subsection{第一种方式是测一份混合组织}
+如果把一块组织中的 RNA 汇总来测，我们得到整份样本的总体表达情况。这类方法常叫 \textbf{bulk RNA-seq}，bulk 可以先理解为“混合在一起”。RNA-seq 指通过测序来研究 RNA。\cite{nhgri-rnaseq}
+
+它像把公司的工作记录全部汇总：你能知道整个公司用了哪些任务信息，但很难区分每条记录来自哪个员工。某个信号变多，可能是相关员工变多，也可能是每个人的活动更强。
+
+\subsection{第二种方式是尽量分别测每个细胞}
+\textbf{单细胞 RNA 测序}，简称 \textbf{scRNA-seq}，尽量把不同细胞的 RNA 信号分开记录。于是可以比较不同细胞，发现它们有哪些身份和状态差异。常见实验需要将细胞从组织中\textbf{解离}，也就是从原来的结构里分离出来。
+
+这像分别保存每个员工的工作记录，但通常丢失了他们原来的座位。并非所有细胞都能成功进入数据，一次记录也可能混入多个细胞，所以仍然需要质量检查。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+研究方式 & 得到什么 & 暂时看不到什么 \\
+\midrule
+混合组织测量 & 整份组织的总体表达 & 每种细胞各自贡献多少 \\
+单细胞测量 & 分别记录细胞间的表达差异 & 常规解离后细胞原来的组织位置 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{单细胞核又是什么}
+一些实验分离并测量细胞核，称为\textbf{单细胞核 RNA 测序}，简称 \textbf{snRNA-seq}。细胞核是细胞的一部分，因此核内 RNA 与整个细胞 RNA 的构成不完全相同。现在只需知道：single-cell 和 single-nucleus 不是完全相同的测量对象。
+
+\subsection{我们的研究问题还缺什么}
+对肿瘤薄片，即使知道存在多少种免疫细胞，我们仍想知道它们在内部还是边缘、与哪些细胞相邻。仅有总体表达或失去原位坐标的单细胞表，都不能直接完整回答这个布局问题。
+
+\takeaway{bulk 看总体，单细胞看个体差异；想研究组织布局，还要保留位置。}
+
+\chapterstart{空间转录组把表达放回组织地图}
+\subsection{空间转录组同时关联表达和位置}
+\term{空间转录组学}{spatial transcriptomics}，是在保留空间位置关联的条件下测量组织中的 RNA 表达。它让我们研究“哪些表达信号出现在哪里”，以及这些位置之间的关系。\cite{stahl2016}
+
+把公司类比补完整：我们有员工的工作记录，也保留座位图。研究对象由一份没有布局的信息表，变成了一张具有表达信息的组织地图。
+
+
+% BEGIN ADDED IMAGE spatial
+\begin{figure}[!htbp]\centering
+\includegraphics[width=.95\linewidth]{空间转录组学_CS_AI入门_讲义_配图/spatial.png}
+\caption{空间数据的真实可视化示例，来自 Squidpy 官方 Visium 教程。左图用连续颜色表示 Sox8 表达信号，右图用离散颜色显示分群及注释标签，两图使用同一组织的空间位置。圆点代表测量位置，不自动等于单个细胞；注释标签包含分析与解释，并非实验直接读出的身份。}\label{fig:handout-spatial}
+\par\smallskip{\footnotesize\color{muted}\raggedright 图片：\href{https://squidpy.readthedocs.io/en/latest/notebooks/examples/plotting/plot_scatter.html}{Squidpy / Theis Lab / scverse}；许可：\href{https://github.com/scverse/squidpy/blob/main/LICENSE}{BSD 3-Clause}；原图等比缩放。\par}
+\end{figure}
+% END ADDED IMAGE spatial
+
+\subsection{为什么位置有生物学意义}
+组织的功能依赖细胞的排列与局部环境。免疫细胞集中在肿瘤边缘或出现在内部，是两个不同的观察；脑组织不同结构层的表达模式，也可能不同。位置帮助研究人员提出更具体的问题，但布局本身不直接证明某个功能或因果关系。
+
+\subsection{空间不意味着每一行都是一个细胞}
+不同技术的测量单位不同。有些数据对应分割得到的细胞，有些对应一个捕获区域。捕获区域常叫 \textbf{spot}，你可以先把它想成组织上的一个小圆圈或小区域，里面可能有多个细胞。
+
+较细的网格也可能被合并成 \textbf{bin}，即一个用于分析的网格区域。无论它多小，网格边界都不自动等于细胞边界。一份数据到底是在测细胞、spot 还是 bin，要看实验和后续处理。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}p{2.8cm} Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+一行对应的对象 & 你能直接说什么 & 你还不能直接说什么 \\
+\midrule
+分割得到的细胞 & 该细胞区域记录到的 RNA & 分割及分子归属完全正确 \\
+多细胞 spot & 该区域的混合 RNA 信号 & 每个细胞分别表达多少 \\
+合并网格 bin & 该网格区域的 RNA 信号 & 这个网格就是一个完整细胞 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+常见实验测量一张二维组织切片。二维坐标保留切片中的位置，不能直接代表完整器官的三维结构。研究三维组织时，通常还需要多个切片或其他信息。
+
+\takeaway{转录组提供 RNA 表达信息，空间保留这些信息在组织中的位置；分析前先确认一个观测位置究竟代表什么。}
+
+\chapterstart{实验怎样知道哪些 RNA 来自哪里}
+\subsection{先看一种典型的测序路线}
+下面以捕获 RNA 的空间条形码方案为例。研究人员准备一张载体，上面不同捕获位置带有不同的条形码序列。\term{条形码}{barcode}可以先理解成位置标签；实验知道每个标签对应哪个位置。
+
+将组织薄片放在载体上，捕获到的 RNA 经实验处理获得相关标签，再进行测序。测序仪读到的序列片段叫 \textbf{read}。计算流程识别标签以及目标基因，便能把分子信号关联回位置。2016 年的经典空间转录组工作采用了这一类思路。\cite{stahl2016}
+
+\subsection{一份读数要回答两个问题}
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+问题 & 帮助回答的信息 & 通俗理解 \\
+\midrule
+来自哪里 & 空间条形码和对应坐标 & 包裹上的地址标签 \\
+属于哪个目标 & RNA 对应的序列或探针信息 & 包裹内容的识别线索 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+实验常将 RNA 的信息转换到适合建库和测序的 DNA 产物上，再测序；这不改变我们研究的对象是 RNA 表达。这里省略实验化学细节，但要避免把“测序仪读到 DNA 产物”误解为“正在研究基因组突变”。\cite{nhgri-rnaseq}
+
+这里的\textbf{建库}，可以先理解为把分子处理成测序仪可以读取的一组材料；它不是建立计算机数据库。
+
+\subsection{为什么多个 reads 不一定等于多个 RNA}
+建库中的扩增可能让一个原始分子产生多个副本，因此多个 reads 可能来源相同。部分方案加入 \term{UMI}{unique molecular identifier，独特分子标识符}，帮助识别重复来源。可以把空间条形码理解为“位置标签”，把 UMI 理解为“分子去重线索”。\cite{tenx-glossary}
+
+例如，在同一位置、同一基因下，若若干 reads 具有相同的 UMI，流程可能把它们合并为一个分子来源的计数。真实去重还涉及序列错误等问题，因此这个例子只说明“reads 数量”和“去重后的分子计数”为何可能不同。
+
+\subsection{另一条路线是直接在组织里成像}
+成像型方法使用探针等分子工具识别目标，并通过显微成像及多轮识别等过程定位 RNA。\textbf{探针}可以先理解为实验中识别特定目标的工具。它可能输出“某种 RNA 在坐标哪里”的分子表，再聚合到细胞或区域。\cite{tenx-spatial}
+
+\takeaway{先理解两条思路：通过标签保留位置，或通过成像定位分子。不同方案能检测什么、测得多细、测得多完整，会影响后续计算问题。现在不用背平台名。}
+
+\partdivider{计算分析与科研实践}{第 10--15 章：从表达矩阵到可信科学结论}{%
+  把实验读数转成矩阵、坐标与图像，理解常见分析步骤及算法任务。沿着肿瘤切片的例子，分清测量、推断、比较和验证，学习判断模型输出能支持怎样的结论。}
+
+\chapterstart{从 RNA 读数到 CS 的矩阵}
+\subsection{把同一位置、同一基因的信号汇总}
+完成识别和计数后，我们可以为每个位置列出：与基因 A 相关的信号多少，与基因 B 相关的信号多少，依此类推。这就得到\term{基因表达矩阵}{gene expression matrix}。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabular}{@{}l r r r@{}}
+\toprule
+\rowcolor{tablehead}
+位置 & 基因 A & 基因 B & 基因 C \\
+\midrule
+P1 & 30 & 2 & 5 \\
+P2 & 27 & 3 & 8 \\
+P3 & 3 & 28 & 4 \\
+P4 & 16 & 17 & 6 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这是教学计数，不是真实数据。A、B、C 也不是实际基因名。假设 A 为上皮相关表达提供线索，B 为免疫相关表达提供线索，C 与某种增殖相关表达有关；真实注释需要多个标志和其他证据。
+
+\subsection{一行、一列、一个数字各是什么}
+一行对应一个位置，在别的数据中也可能对应一个细胞。一列对应一个基因。P1 行、A 列的 30，表示实验在 P1 对基因 A 记录的计数为 30；它不是 P1 有 30 个基因 A，也不一定是精确无误的 30 个真实 RNA 分子。
+
+用 CS 符号写，原始计数矩阵可以表示为
+\[
+  X\in\mathbb{N}_0^{N\times G},\qquad
+  X_{ig}=\text{第 $i$ 个观测单位对第 $g$ 个基因记录到的计数}.
+\]
+这里 $N$ 是观测位置数，$G$ 是基因数，$\mathbb{N}_0$ 表示包含零的非负整数集合。教学例子中 $N=4$、$G=3$，每一行都可以看作一个三维特征向量。
+
+归一化或其他变换后，矩阵一般写作 $X\in\mathbb{R}^{N\times G}$，数值可以变成小数，甚至在某些表示中有负值。\textbf{先确认数据状态，再解释数字。}另外，有些文件把基因放在行、位置放在列；本文统一采用“观测 $\times$ 基因”的方向。
+
+\subsection{这样就能开始读表达模式}
+P1 和 P2 的 A 较高，P3 的 B 较高，P4 同时有 A 与 B。若 P4 是多细胞 spot，一个合理假设是它混合了不同类型的细胞。但如果它对应单个细胞，就还要考虑真实共表达、分割或背景问题。
+
+\subsection{矩阵里的零该怎样理解}
+零首先表示这个流程没有记录到对应信号。实际表达低、捕获不到或测序不足，都可能导致零。因此不能把全部零都认定为生物学上的不存在，也不能假设它们全部都是应当补齐的缺失。
+
+\checkpoint{矩阵一行是测量单位，一列是基因，数值是实验读数或处理后的表达值。请试着解释：为什么 P4 的读数不能直接证明“一个细胞同时具有两种身份”？}
+
+\chapterstart{坐标、图像和文件怎样与矩阵对应}
+\subsection{表达矩阵之外还要有坐标}
+对四个位置，我们可以另外保存
+\[
+  P1=(0,0),\quad P2=(1,0),\quad P3=(0,1),\quad P4=(1,1).
+\]
+这张坐标表与表达表用同一组位置 ID 对应。ID 可以先理解为数据库里关联两张表的键。二维坐标可以写成 $S\in\mathbb{R}^{N\times 2}$；$S$ 的第 $i$ 行和 $X$ 的第 $i$ 行必须对应同一个观测单位。实际操作中，应检查 ID 的对应关系，不能只凭两个数组的行数相同就直接拼接。
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small]
+  \node at (2.2,3.45) {表达计数};
+  \foreach \x/\lab in {0.8/A,1.7/B,2.6/C}
+    \node at (\x+0.45,-0.25) {\lab};
+  \foreach \y/\lab in {2.4/P1,1.6/P2,0.8/P3,0/P4}
+    \node[anchor=east] at (0.7,\y+0.4) {\lab};
+  \foreach \x/\y/\v in {
+    0.8/2.4/30,1.7/2.4/2,2.6/2.4/5,
+    0.8/1.6/27,1.7/1.6/3,2.6/1.6/8,
+    0.8/0.8/3,1.7/0.8/28,2.6/0.8/4,
+    0.8/0/16,1.7/0/17,2.6/0/6} {
+    \pgfmathsetmacro{\shade}{8+2.5*\v}
+    \fill[accent!\shade!white] (\x,\y) rectangle +(0.9,0.8);
+    \draw[white] (\x,\y) rectangle +(0.9,0.8);
+    \ifnum\v>22
+      \node[text=white] at (\x+0.45,\y+0.4) {\v};
+    \else
+      \node at (\x+0.45,\y+0.4) {\v};
+    \fi
+  }
+  \begin{scope}[shift={(8,0.4)}]
+    \node at (1.1,3.05) {空间邻居};
+    \draw[gray,thick] (0,0) -- (2.2,0) -- (2.2,2.2) -- (0,2.2) -- cycle;
+    \foreach \x/\y/\lab/\col in {
+      0/0/P1/orange!75!black,2.2/0/P2/orange!75!black,
+      0/2.2/P3/accent,2.2/2.2/P4/violet!65!gray} {
+      \node[circle,fill=\col,text=white,minimum size=0.7cm,inner sep=0pt]
+        at (\x,\y) {\lab};
+    }
+    \node at (0,-0.6) {0}; \node at (2.2,-0.6) {1};
+    \node at (-0.65,0) {0}; \node at (-0.65,2.2) {1};
+    \node at (1.1,-0.95) {$x$}; \node at (-1,1.1) {$y$};
+  \end{scope}
+\end{tikzpicture}
+\caption{教学示意。左边看表达，右边看位置；连线表示横向或纵向相邻。颜色只是帮助区分表达特征，不是经过验证的细胞类型标签。}
+\label{fig:matrix-spatial}
+\end{figure}
+
+\subsection{表达相似和位置相邻是两种关系}
+P1 与 P2 的表达模式较相似；P1 与 P3 在空间上相邻，却可能有明显不同的表达。前者研究“分子特征像不像”，后者研究“在组织里近不近”。后面遇到表达邻居和空间邻居时，就用这个例子区分。
+
+\subsection{组织图像是第三类信息}
+图像显示形态与结构，坐标告诉你表达位置落在图像的哪里。把两者对齐叫\term{配准}{registration}。如果缩放、方向或坐标单位错了，一个真实表达信号就可能被画到错误的区域。图像像素和物理微米也不是同一种单位。
+
+\subsection{AnnData 和 H5AD 只是数据容器与格式}
+AnnData 是常见的带注释矩阵对象；H5AD 是它的常见保存格式。你可以先把它理解成“矩阵 $+$ 关联表 $+$ 附加数组”的一个文件包。\cite{anndata}
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule
+\rowcolor{tablehead}
+字段 & 常见用途 \\
+\midrule
+\code{X} & 工作矩阵，通常为观测 $\times$ 基因 \\
+\code{obs} & 每行观测的元数据，例如样本 ID、质量指标、注释 \\
+\code{var} & 基因信息，例如基因名称 \\
+\code{obsm} & 与观测对应的附加数组，可存坐标或低维表示 \\
+\code{layers} & 相同形状、不同处理状态的表达矩阵 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+文件叫 H5AD，不代表它已经做完质量控制；字段叫 \code{raw}，也不保证里面就是原始计数。应以数据说明和处理记录为准。
+
+\chapterstart{常见分析步骤分别为了什么}
+\begingroup\linespread{1.0}\selectfont\setlength{\parskip}{.12em}\renewcommand{\arraystretch}{1.1}\ctexset{subsection={beforeskip=.45em,afterskip=.15em}}
+\subsection{首先确认你拿到的是可靠输入}
+\term{质量控制}{quality control，QC}，是检查哪些观测可能有问题。例如某位置总计数极低，可能是没覆盖到组织，也可能是这里细胞本来少。QC 不是套一组统一阈值；要结合组织图像、平台和实验背景解释。
+
+对原始计数矩阵，一个直观的检查量是第 $i$ 个位置的总计数
+\[
+  L_i=\sum_{g=1}^{G}X_{ig}.
+\]
+$L_i$ 大，表示记录到的总信号多；它本身不能区分“细胞更多”“每个细胞 RNA 更多”和“测量效率更高”等原因。
+
+\subsection{再处理数值尺度并找到表达模式}
+\term{归一化}{normalization}调整数值尺度，缓解部分测量总量差异；常见 \code{log1p} 变换计算 $\log(1+x)$，压缩特别大的数值。它们不能恢复未捕获分子，也不保证消除所有技术误差。不同模型要求的输入状态不同。\cite{scanpy}
+
+例如，一种按总量缩放再取对数的处理方式是
+\[
+  \widetilde{X}_{ig}=\frac{X_{ig}}{L_i}\,c,\qquad
+  Z_{ig}=\log\bigl(1+\widetilde{X}_{ig}\bigr),\quad L_i>0,
+\]
+其中 $c$ 是人为选择的统一尺度。这个式子只是帮助你读懂一种常见操作，不是所有平台和模型的统一配方。$L_i=0$ 的观测需要先单独处理，也不能把 $Z$ 当作原始计数输入所有模型。
+
+很多基因同时进入分析时，研究人员可能先选择较有信息的基因，再降维。\textbf{降维}就是用更少的数值保留重要差异，PCA 是一种常用方法。\textbf{高变基因}（highly variable genes，HVG）是根据变异特征选出的一类候选基因；它不等于“最重要的致病基因”。
+
+\subsection{聚类是发现群体，注释是解释群体}
+\term{聚类}{clustering}把表达较相似的观测分组；\term{注释}{annotation}则综合标志基因、参考数据和组织背景，解释这些组可能是什么。聚类编号 0、1、2 本身没有生物身份。
+
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}p{2.4cm} Y Y@{}}
+\toprule
+\rowcolor{tablehead}
+步骤 & 直白解释 & 一个需要追问的问题 \\
+\midrule
+QC & 读数是否值得信任 & 低信号是质量问题还是组织特点 \\
+归一化 & 让部分尺度差异更可比 & 会不会改变想研究的总量差异 \\
+降维与聚类 & 找出主要差异并分组 & 分组来自类型、状态还是批次 \\
+注释 & 为群体给出生物解释 & 有哪些标志和参考支持 \\
+空间分析 & 将表达模式放回组织 & 区域、邻居和边界有什么意义 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+这里的\textbf{批次}是不同实验轮次、处理条件等带来的分组；批次差异可能与想研究的生物差异混在一起。
+
+\subsection{为什么 UMAP 图不是组织地图}
+UMAP 常把高维表达映射到二维，用于展示某些表达关系。图上的横纵坐标是算法产生的，不是细胞在组织里的真实坐标。表达图上靠近的点，可能在组织里很远。想看组织布局，要画真实空间坐标。
+
+如果遇到 Scanpy，它是常见表达分析工具；Squidpy 增加空间图与空间统计等能力。先知道工具各自的用途，再学习具体函数。\cite{scanpy,squidpy}
+
+\takeaway{每一步都有要解决的测量或分析问题；一套流程跑通，并不自动意味着分组有生物学意义。}
+
+
+\endgroup
+\chapterstart{算法能够研究哪些问题}
+\subsection{问题一：组织里有哪些不同区域}
+研究人员想找出结构或表达不同的区域，例如某些组织层、肿瘤内部或边缘。这样的区域叫\term{空间域}{spatial domain}。一种区域可以包含多类细胞，同一种细胞也可以出现在多个区域。
+
+从 CS 看，这涉及聚类、表征学习或分割。但空间相邻的点不一定同类，模型过度平滑可能把真实边界抹掉。空间域标签回答的是“这里属于什么区域”，不一定回答“这里的细胞是什么类型”。
+
+\subsection{问题二：混合区域里有什么细胞}
+一个 spot 中含有多种细胞时，测到的是混合表达。\term{反卷积}{deconvolution}，就是尝试从混合信号推断各类成分。它类似已知不同乐器的大致音色，再分析一段混合声音里各自的贡献。
+
+一些方法使用单细胞数据作为参考，相当于提供不同细胞类型的表达模板，再推断空间位置的组成。输出可能是类型丰度、相对贡献或比例，要按方法定义解释；RNA 贡献比例不自动等于细胞数量比例。cell2location 是相关方法的一个例子。\cite{cell2location}
+
+\subsection{问题三：能否从图像预测表达}
+给模型一个组织图像块，让它输出一组基因的表达值，这可以看作多输出回归或多模态学习。它利用形态与表达之间的统计关联；预测结果仍是推断，不能当作新完成的 RNA 实验。
+
+\subsection{问题四：哪些信号在空间上变化}
+研究人员会寻找与位置有关的表达模式，例如某个信号在某个区域更明显。这样的基因可称为\textbf{空间变异基因}（spatially variable genes，SVG）。表达变化很大却分布随机，与呈现有组织的空间梯度，是不同现象。
+
+\subsection{问题五：哪些细胞可能相互影响}
+细胞可以通过分子信号相互影响。\term{配体}{ligand}是与受体结合的信号分子等；\term{受体}{receptor}是接收相关信号的分子组件。算法结合表达、空间关系和已有配体受体知识，提出候选通信关系。CellChat 是相关推断框架的一个例子。\cite{cellchat}
+
+空间靠近或 RNA 共表达都不是通信发生的完整证明。需要进一步研究对应蛋白质、下游变化或实验干预。CS 在这里帮助提出和检验假设，而不是只输出一张漂亮的网络。
+
+\takeaway{先把生物问题翻译成明确的输入与输出，再选择算法。区域、细胞组成、预测表达和候选通信关系是不同的输出。}
+
+\chapterstart{用一个问题串起科研全过程}
+\enlargethispage{.8\baselineskip}
+\subsection{从问题开始，而不是从模型开始}
+贯穿全文的问题是：\textbf{这张肿瘤组织切片中的免疫细胞主要在哪里？}为了回答它，先明确实验记录的是单个细胞还是混合 spot，并确认哪些表达信号和参考数据能帮助识别免疫细胞。
+
+\subsection{第一步：分清观察与推断}
+实验直接提供的是记录到的分子信号与对应位置。若有组织图像，它还提供形态信息。“这个位置含有多少免疫细胞”通常还需要注释或反卷积，属于基于观测的推断。
+
+\subsection{第二步：定义你要比较的区域}
+肿瘤内部与边缘怎样确定？可能来自专家对图像的标注，也可能来自其他有依据的分析。必须说明区域定义，否则“更多在内部”没有明确的比较对象。标注是参照信息，但也可能存在不确定性。
+
+\subsection{第三步：选择与测量单位相符的方法}
+单细胞数据可以在有依据的注释后统计不同区域的细胞分布。混合 spot 数据需要意识到区域内可能包含多种细胞，必要时推断类型丰度，不能强制把整个 spot 都判成单一细胞身份。
+
+\subsection{第四步：看结果是否真的支持描述}
+把结果画回组织，检查是否与图像和标志表达相符；同时比较数量、密度或丰度等明确指标。内部面积大时，单纯看总数量可能产生误导。因此要提前定义“更多”是总数更多、单位面积更多，还是组成比例更高。
+
+例如，对可以按细胞计数的数据，设区域 $r$ 中免疫细胞数为 $n_{\mathrm{immune},r}$，区域面积为 $A_r$，区域内总细胞数为 $n_{\mathrm{all},r}$，则
+\[
+  \text{免疫细胞密度}=\frac{n_{\mathrm{immune},r}}{A_r},\qquad
+  \text{免疫细胞比例}=\frac{n_{\mathrm{immune},r}}{n_{\mathrm{all},r}}.
+\]
+两者分别回答“单位面积有多少”和“细胞中占多少”。分母须大于零；若方法只输出相对 RNA 贡献，就不能直接把它当成这里的细胞数。
+
+\subsection{第五步：决定能把结论说到哪里}
+在这一张切片上看到了某种分布，可以形成针对这份样本的观察。如果要推广到一类患者，则需要更多独立供体和合适的实验设计。如果要解释分布为何形成，还需要机制或干预证据。
+
+\begingroup\renewcommand{\arraystretch}{1.1}
+\begin{center}
+\rowcolors{2}{lightblue}{white}
+\begin{tabularx}{\linewidth}{@{}l Y@{}}
+\toprule
+\rowcolor{tablehead}
+阶段 & 一句话表述 \\
+\midrule
+测量 & 这个位置记录到哪些 RNA 信号 \\
+推断 & 这些信号可能由哪些细胞产生 \\
+比较 & 不同区域的分布是否有明确差异 \\
+验证 & 额外证据和独立样本是否支持这个结果 \\
+解释 & 什么机制可能造成差异，仍需哪些实验 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+\endgroup
+
+\takeaway{进入科研后，不只问模型能做什么，还要问输入是什么证据、输出是什么假设，以及怎样验证它。}
+
+\chapterstart{从 CS 模型到可信科学结论}
+\subsection{大量位置不等于大量独立患者}
+一名患者的一张切片可以产生数千个位置，但这些位置共享供体和局部环境。数千个 spot 不能当作数千名患者。模型评估和统计推断都要明确独立样本单位。\textbf{供体}就是提供组织样本的个体。
+
+\subsection{训练、测试怎样分，取决于想验证什么}
+随机拆同一张切片的相邻位置，可以研究同一切片内的插值能力，但不能直接证明模型对新患者泛化。如果目标是新患者，通常应按供体划分；如果目标是新切片，就需要说明切片与供体之间的关系。
+
+例如，同一患者的两张切片分属训练集和测试集，仍不能把这个设置称为对“未见患者”的测试。划分单位应与想宣称的泛化范围一致。
+
+特征选择、参考构建或参数调节如果用到了测试数据，也要说明。允许使用无标签目标数据的设置，与完全不见目标数据的泛化设置，回答的不是同一个问题。
+
+\subsection{已有算法结果未必就是地面真值}
+\textbf{Ground truth} 常译为真值，实际研究中的参照可能是专家区域标注、独立实测，也可能是某个已有算法的输出。它们的证据强度不同。一个模型更像已有模型，不必然表示它更接近真实生物状态。
+
+\subsection{差异表达不直接证明原因}
+比较两组时发现某个基因表达不同，称为\textbf{差异表达}。它可以提示值得研究的现象，但差异可能来自细胞组成、状态、测量方式等。\textbf{FDR}（false discovery rate，假发现率）用于控制大量检验中的假发现问题；它不代替差异幅度和生物学解释，也不应直接解释为某一项具体结论为假的概率。
+
+如果提出“某个基因导致了某种现象”，通常需要比相关性更强的证据，例如合适的干预实验。仅凭观察数据，表述应停留在数据实际支持的范围内。
+
+\subsection{读论文时先回答五个问题}
+\begin{enumerate}
+  \item 研究的是哪种组织，想回答什么生物问题？
+  \item 一行是什么，表达值是怎样得到的？
+  \item 模型输出是直接观测，还是推断结果？
+  \item 用什么参照和独立数据验证？
+  \item 比简单方法多解决了哪个具体困难？
+\end{enumerate}
+
+\checkpoint{空间转录组把表达与位置关联；算法帮助组织和推断信息；生物结论仍需要与问题相匹配的验证。现在请从“组织薄片”开始，依次讲清测量、矩阵、位置、算法输出和验证之间的关系。}
+
+\partdivider{术语回查与延伸阅读}{第 16--17 章：回到概念，继续学习}{%
+  用术语表回查前文的概念与常见混淆，再按学习进度阅读基础名词、数据对象与分析工具文档。无需一次记住所有术语。}
+
+\chapterstart{核心术语回查}
+\subsection{如何使用这份术语表}
+这一章用于回查，不需要背诵。先用左侧术语找到前文已经建立的直觉，再按具体论文或实验补充细节。
+
+\subsection{核心术语与常见混淆}
+{\small
+\begin{longtable}{@{}p{3.35cm} p{5.05cm} p{\dimexpr\linewidth-8.4cm-4\tabcolsep\relax}@{}}
+\toprule
+\rowcolor{tablehead}
+术语 & 最初的理解 & 容易混淆的地方 \\
+\midrule
+\endfirsthead
+\toprule
+\rowcolor{tablehead}
+术语 & 最初的理解 & 容易混淆的地方 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+细胞 Cell & 组织里的基本结构与功能单位 & 不是每个空间观测都等于一个细胞 \\
+组织 Tissue & 细胞与周围材料形成的结构 & 组织含有布局与结构关系 \\
+DNA & 保存遗传信息的分子 & DNA 不会因为转录而全部变成 RNA \\
+基因 Gene & DNA 上具有功能的特定区段 & 基因存在不等于当前高表达 \\
+RNA 与 mRNA & RNA 是一类分子，mRNA 是其中一种 & 部分 RNA 不被翻译成蛋白质 \\
+蛋白质 Protein & 氨基酸链形成的功能分子 & RNA 数量不直接等于蛋白质数量 \\
+转录与翻译 & 制造 RNA 与按 mRNA 制造蛋白质 & 两者是不同步骤 \\
+基因组与转录组 & 遗传信息与当时的 RNA 集合 & 保存的信息与表达状态不同 \\
+转录本 Transcript & 转录产生的 RNA 产物 & 同一基因可能有不同版本的产物 \\
+基因表达 & 基因信息被用于产生功能产物 & RNA 数据中常指相关 RNA 信号水平 \\
+细胞类型与状态 & 相对稳定的身份与当前活动情况 & 一个聚类可能反映类型或状态 \\
+标志基因 Marker & 帮助识别身份或状态的表达线索 & 一个标志通常不够确证身份 \\
+Panel & 预先选定的测量基因名单 & 不在名单中不等于零表达 \\
+Bulk 与 scRNA-seq & 混合组织与单细胞的 RNA 测量 & 测量总体与区分个体是不同层次 \\
+Spot 与 bin & 捕获区域与合并网格区域 & 区域边界不自动等于细胞边界 \\
+Barcode 与 UMI & 位置等标签与分子去重线索 & UMI 不用于标注细胞类型 \\
+Read 与 count & 序列读段与流程汇总后的计数 & 扩增可使多个 reads 来自同一分子 \\
+Counts 与归一化值 & 计数与经过尺度处理的数值 & 必须按数据状态解释 \\
+配准 Registration & 将坐标与图像等信息对齐 & 单位、缩放和方向错误会造成错位 \\
+AnnData 与 H5AD & 数据对象与常见文件格式 & 文件格式不能保证处理质量 \\
+聚类与注释 & 算法分组与生物学解释 & 编号没有自带身份标签 \\
+UMAP 与空间坐标 & 表达的低维表示与实际组织位置 & UMAP 图不是组织地图 \\
+空间域与反卷积 & 找组织区域与拆解混合表达 & 区域标签与细胞组成是不同输出 \\
+HVG 与 SVG & 表达变异信息与空间变化信息 & 变异大不一定有空间规律 \\
+配体与受体 & 参与信号传递的分子与接收组件 & 通信候选仍需要验证 \\
+供体 Donor & 提供组织样本的个体 & 很多位置不等于很多独立供体 \\
+\end{longtable}
+}
+
+\chapterstart{来源和下一步阅读}
+\subsection{按学习进度安排下一步阅读}
+先读 NHGRI 的基础名词页面，再用本文的矩阵例子理解数据。理解到第 11 章后，可以读 AnnData 文档；理解到第 12 章后，再看 Scanpy 与 Squidpy 的基础示例。暂时不必先啃复杂算法论文。
+
+面向本科生，可以先做到能解释术语、读懂矩阵和区分观察与推断；面向准备进入科研的研究生，再重点检查测量单位、数据处理状态、独立样本与验证设计。两条路径沿用同一条理解主线。
+
+\subsection{参考来源}
+下列 18 项来源沿用原 PDF 的编号与链接。工具文档页面可能随版本更新，实际使用时应结合所用版本阅读。
+
+\begingroup
+\linespread{1.04}\selectfont
+\small
+\setlength{\parskip}{0.25em}
+% 已使用第 17 章作为参考文献标题，避免 thebibliography 再生成一个无编号标题。
+\renewcommand{\section}[2]{}
+\begin{thebibliography}{99}
+\setlength{\itemsep}{0.15em}
+
+\bibitem{nci-organ}
+National Cancer Institute (NCI).
+\textit{Organ：器官与组织层次}.
+\url{https://www.cancer.gov/publications/dictionaries/cancer-terms/def/organ}
+
+\bibitem{nhgri-dna}
+National Human Genome Research Institute (NHGRI).
+\textit{Deoxyribonucleic Acid (DNA)：DNA 的结构与信息}.
+\url{https://www.genome.gov/genetics-glossary/Deoxyribonucleic-Acid-DNA}
+
+\bibitem{nhgri-glossary}
+NHGRI.
+\textit{Talking Glossary：基因、染色体、基因组等基础术语}.
+\url{https://www.genome.gov/genetics-glossary}
+
+\bibitem{nhgri-transcription}
+NHGRI. \textit{Transcription：转录}.
+\url{https://www.genome.gov/genetics-glossary/Transcription}
+
+\bibitem{nhgri-mrna}
+NHGRI. \textit{Messenger RNA (mRNA)：信使 RNA}.
+\url{https://www.genome.gov/genetics-glossary/Messenger-RNA-mRNA}
+
+\bibitem{nhgri-protein}
+NHGRI. \textit{Protein：蛋白质}.
+\url{https://www.genome.gov/genetics-glossary/Protein}
+
+\bibitem{nhgri-translation}
+NHGRI. \textit{Translation：翻译}.
+\url{https://www.genome.gov/genetics-glossary/Translation}
+
+\bibitem{nhgri-expression}
+NHGRI. \textit{Gene Expression：基因表达}.
+\url{https://www.genome.gov/genetics-glossary/Gene-Expression}
+
+\bibitem{nhgri-transcriptome}
+NHGRI. \textit{Transcriptome Fact Sheet：转录组}.
+\url{https://www.genome.gov/about-genomics/fact-sheets/Transcriptome-Fact-Sheet}
+
+\bibitem{nhgri-rnaseq}
+NHGRI. \textit{RNA-seq：RNA 测序的基本原理}.
+\url{https://www.genome.gov/genetics-glossary/RNA-seq}
+
+\bibitem{stahl2016}
+Ståhl 等，2016.
+\textit{Visualization and analysis of gene expression in tissue sections by spatial transcriptomics}.
+\textit{Science}. 空间转录组原始研究。
+\url{https://www.science.org/doi/10.1126/science.aaf2403}
+
+\bibitem{tenx-glossary}
+10x Genomics.
+\textit{Glossary of Terms：UMI 等实验术语}.
+\url{https://www.10xgenomics.com/support/cn/software/cell-ranger-arc/latest/getting-started/glossary-of-terms}
+
+\bibitem{tenx-spatial}
+10x Genomics.
+\textit{Spatial Transcriptomics：空间 RNA 检测技术示例}.
+\url{https://www.10xgenomics.com/spatial-transcriptomics}
+
+\bibitem{anndata}
+AnnData 文档.
+\textit{AnnData API：数据对象及字段}.
+\url{https://anndata.readthedocs.io/en/stable/generated/anndata.AnnData.html}
+
+\bibitem{scanpy}
+Scanpy 文档.
+\textit{Clustering：预处理与聚类基础流程}.
+\url{https://scanpy.readthedocs.io/en/stable/tutorials/basics/clustering.html}
+
+\bibitem{squidpy}
+Palla 等，2022.
+\textit{Squidpy: a scalable framework for spatial omics analysis}.
+\textit{Nature Methods}. 空间分析框架。
+\url{https://www.nature.com/articles/s41592-021-01358-2}
+
+\bibitem{cell2location}
+Kleshchevnikov 等，2022.
+\textit{Cell2location maps fine-grained cell types in spatial transcriptomics}.
+\textit{Nature Biotechnology}. 反卷积方法示例。
+\url{https://www.nature.com/articles/s41587-021-01139-4}
+
+\bibitem{cellchat}
+Jin 等，2021.
+\textit{Inference and analysis of cell-cell communication using CellChat}.
+\textit{Nature Communications}. 通信推断方法示例。
+\url{https://www.nature.com/articles/s41467-021-21246-9}
+
+\end{thebibliography}
+\endgroup
+
+\end{document}

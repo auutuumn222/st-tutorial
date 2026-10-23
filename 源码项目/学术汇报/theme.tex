@@ -1,0 +1,70 @@
+% 已确认的经典蓝色 Madrid 主题
+\usetheme{Madrid}
+\usefonttheme{professionalfonts}
+\definecolor{AcademicBlue}{RGB}{51,51,178}
+\definecolor{BlueDark}{RGB}{26,26,89}
+\definecolor{BlueMid}{RGB}{38,38,134}
+\definecolor{NoteGray}{RGB}{105,105,105}
+\definecolor{GridGray}{RGB}{220,220,230}
+\setbeamercolor{structure}{fg=AcademicBlue}
+\setbeamercolor{palette primary}{fg=white,bg=AcademicBlue}
+\setbeamercolor{palette secondary}{fg=white,bg=BlueMid}
+\setbeamercolor{palette tertiary}{fg=white,bg=BlueDark}
+\setbeamercolor{frametitle}{fg=white,bg=AcademicBlue}
+\setbeamercolor{title}{fg=white,bg=AcademicBlue}
+\setbeamercolor{subtitle}{fg=white}
+\setbeamercolor{normal text}{fg=black,bg=white}
+\setbeamercolor{block title}{fg=white,bg=AcademicBlue}
+\setbeamercolor{block body}{fg=black,bg=AcademicBlue!7!white}
+\setbeamercolor{author in head/foot}{fg=white,bg=BlueDark}
+\setbeamercolor{title in head/foot}{fg=white,bg=BlueMid}
+\setbeamercolor{date in head/foot}{fg=white,bg=AcademicBlue}
+\setbeamerfont{title}{size=\Large,series=\mdseries}
+\setbeamerfont{subtitle}{size=\normalsize,series=\mdseries}
+\setbeamerfont{frametitle}{size=\Large,series=\mdseries}
+\setbeamerfont{block title}{size=\normalsize,series=\mdseries}
+\setbeamerfont{author}{size=\normalsize}
+\setbeamerfont{institute}{size=\small}
+\setbeamerfont{date}{size=\normalsize}
+\setbeamersize{text margin left=5mm,text margin right=5mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{enumerate items}[ball]
+\setbeamertemplate{items}[ball]
+\setbeamertemplate{blocks}[rounded][shadow=true]
+% 部分旧版PGF的dvipdfmx驱动在保存阴影对象编号时使用了错误的let展开。
+% 下方仅对具有该对象计数器的dvipdfmx类后端应用等价的资源登记定义。
+\makeatletter
+\AtBeginDocument{%
+  \@ifundefined{pgfsys@objnum}{}{%
+    \def\pgf@sys@pdf@install@mask#1{%
+      \pgfutil@addpdfresource@extgs{%
+        /pgfsmask\csname pgfsmaskxform@#1\endcsname\space <<
+        /SMask << /S /Luminosity /G @pgfsmask\csname pgfsmaskxform@#1\endcsname >> >>}%
+      \expandafter\xdef\csname pgfsmask@#1\endcsname{\csname pgfsmaskxform@#1\endcsname}%
+    }%
+  }%
+}
+\makeatother
+\setlength{\parindent}{0pt}
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.1ex,dp=.85ex,center]{author in head/foot}%
+    \fontsize{5}{6}\selectfont\bfseries\insertshortauthor\quad 空间转录组学入门
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.416666\paperwidth,ht=2.1ex,dp=.85ex,center]{title in head/foot}%
+    \fontsize{5}{6}\selectfont\bfseries\insertsubsectionhead
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333334\paperwidth,ht=2.1ex,dp=.85ex]{date in head/foot}%
+    \fontsize{5}{6}\selectfont\bfseries\hspace{5mm}\insertshortdate
+    \hfill\insertframenumber\,/\,\inserttotalframenumber\hspace{1.5mm}
+  \end{beamercolorbox}}}
+\hypersetup{colorlinks=true,urlcolor=NoteGray,linkcolor=white,citecolor=NoteGray}
+\newcommand{\source}[1]{\vfill\par{\fontsize{6}{8}\selectfont\color{NoteGray}\raggedright #1\par}}
+\newcommand{\teaching}{\source{教学构造：沿用原讲义示例，不是真实实验数据。}}
+\newcommand{\bluelabel}[1]{{\color{AcademicBlue}#1}\par\smallskip}
+\newcommand{\keypoint}[2]{\begin{block}{#1}#2\end{block}}
+\newcommand{\wideitems}{\setlength{\itemsep}{.75em}}
+\newcommand{\compactitems}{\setlength{\itemsep}{.35em}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\codetext}[1]{\texttt{#1}}
