@@ -1,0 +1,27 @@
+# LaTeX compilation files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex
+*.synctex.gz
+*.blg
+*.bcf
+*.run.xml
+*.xdv
+*.dvi
+
+# Temporary build directories
+/tmp/
+/build/
+/out/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
